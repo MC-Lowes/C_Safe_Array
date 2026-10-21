@@ -1,0 +1,113 @@
+#ifndef T
+#error "define T before including Array.def"
+#endif
+
+#include <stddef.h>
+#include <stdbool.h>
+#include <assert.h>
+
+#define ARRAY_DEF_CAT_(base, suff) base ## suff
+#define ARRAY_DEF_BUF_(base, suff) ARRAY_DEF_CAT_(base, suff)
+#define ARRAY_DEF_TYPED_(name) ARRAY_DEF_BUF_(name, T)
+
+
+typedef struct {
+  T     *data;
+  size_t len;
+} ARRAY_DEF_TYPED_(Array_);
+
+
+static inline T
+ARRAY_DEF_TYPED_(get_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr, size_t i)
+{
+  assert(i < arr->len);
+  return arr->data[i];
+}
+
+
+static inline void
+ARRAY_DEF_TYPED_(set_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr, size_t i, T val)
+{
+  assert(i < arr->len);
+  arr->data[i] = val;
+}
+
+
+static inline T *
+ARRAY_DEF_TYPED_(at_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr, size_t i)
+{
+  assert(i < arr->len);
+  return &arr->data[i];
+}
+
+
+static inline T *
+ARRAY_DEF_TYPED_(front_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{
+  assert(arr->len > 0);
+  return &arr->data[0];
+}
+
+
+static inline T *
+ARRAY_DEF_TYPED_(back_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{
+  assert(arr->len > 0);
+  return &arr->data[arr->len - 1];
+}
+
+
+static inline bool
+ARRAY_DEF_TYPED_(empty_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{
+  return arr->len == 0;
+}
+
+
+static inline T *
+ARRAY_DEF_TYPED_(begin_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{
+  return arr->data;
+}
+
+
+static inline T *
+ARRAY_DEF_TYPED_(end_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{
+  return arr->data + arr->len;
+}
+
+
+static inline void
+ARRAY_DEF_TYPED_(fill_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr, T val)
+{
+  for (size_t i = 0; i < arr->len; ++i) {
+    arr->data[i] = val;
+  }
+}
+
+
+static inline void
+ARRAY_DEF_TYPED_(swap_Array_)(ARRAY_DEF_TYPED_(Array_) *const arrA, ARRAY_DEF_TYPED_(Array_) *const arrB)
+{
+  assert(arrA->len == arrB->len);
+  for (size_t i = 0; i < arrA->len; ++i) {
+    T tmp = arrA->data[i];
+    arrA->data[i] = arrB->data[i];
+    arrB->data[i] = tmp;
+  }
+}
+
+
+static inline void
+ARRAY_DEF_TYPED_(clear_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr)
+{
+  for (size_t i = 0; i < arr->len; ++i) {
+    arr->data[i] = 0;
+  }
+}
+
+#undef ARRAY_DEF_TYPED_
+#undef ARRAY_DEF_BUF_
+#undef ARRAY_DEF_CAT_
+#undef T
