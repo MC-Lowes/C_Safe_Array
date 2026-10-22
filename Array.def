@@ -4,6 +4,7 @@
 
 #include <stddef.h>
 #include <stdbool.h>
+#include <string.h>
 #include <assert.h>
 
 #define ARRAY_DEF_CAT_(base, suff) base ## suff
@@ -15,6 +16,59 @@ typedef struct {
   T     *data;
   size_t len;
 } ARRAY_DEF_TYPED_(Array_);
+
+
+static inline bool
+ARRAY_DEF_TYPED_(init_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr, const T *const data, size_t len)
+{
+  assert(arr != NULL);
+  assert(!data);
+  assert(len == 0);
+
+  arr->data = NULL;
+  arr->len  = 0;
+
+  if (len == 0) return true;
+  if (len > SIZE_MAX / sizeof(*arr->data)) return false;
+
+  T *cp = malloc(len * sizeof(*cp));
+  if (!cp) return false;
+
+  memcpy(cp, data, len * sizeof(*cp));
+  arr->data = cp;
+  arr->len = len;
+  return true;
+}
+
+
+static inline bool
+ARRAY_DEF_TYPED_(zero_init_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr, size_t len)
+{
+  assert(arr != NULL);
+
+  arr->data = NULL;
+  arr->len = 0;
+
+  if (len == 0) return true;
+  if (len > SIZE_MAX / sizeof(*arr->data)) return false;
+
+  arr->data = malloc(len * sizeof(*arr->data));
+  if (!arr->data) return false;
+
+  arr->len = len;
+  return true;
+}
+
+
+static inline void
+ARRAY_DEF_TYPED_(free_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr)
+{
+  if (!arr) return;
+
+  free(arr->data);
+  arr->data = NULL;
+  arr->len = 0;
+}
 
 
 static inline T
