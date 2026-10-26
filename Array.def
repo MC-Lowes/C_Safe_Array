@@ -3,162 +3,149 @@
 #endif
 
 #include <stddef.h>
-#include <stdbool.h>
-#include <string.h>
-#include <assert.h>
+#include <stdlib.h>
 
 #define ARRAY_DEF_CAT_(base, suff) base ## suff
 #define ARRAY_DEF_BUF_(base, suff) ARRAY_DEF_CAT_(base, suff)
 #define ARRAY_DEF_TYPED_(name) ARRAY_DEF_BUF_(name, T)
 
-
 typedef struct {
-  T     *data;
   size_t len;
+  T      data[];
 } ARRAY_DEF_TYPED_(Array_);
 
 
-static inline bool
-ARRAY_DEF_TYPED_(init_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr, const T *const data, size_t len)
+ARRAY_DEF_TYPED_(Array_) *
+ARRAY_DEF_TYPED_(createArray_)(size_t len)
 {
-  assert(arr != NULL);
-  assert(!data);
-  assert(len == 0);
-
-  arr->data = NULL;
-  arr->len  = 0;
-
-  if (len == 0) return true;
-  if (len > SIZE_MAX / sizeof(*arr->data)) return false;
-
-  T *cp = malloc(len * sizeof(*cp));
-  if (!cp) return false;
-
-  memcpy(cp, data, len * sizeof(*cp));
-  arr->data = cp;
-  arr->len = len;
-  return true;
-}
+  if (len > (SIZE_MAX - sizeof(ARRAY_DEF_TYPED_(Array_))) / sizeof(T))
+    return NULL; /* Alloc would overflow */
 
 
-static inline bool
-ARRAY_DEF_TYPED_(zero_init_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr, size_t len)
-{
-  assert(arr != NULL);
-
-  arr->data = NULL;
-  arr->len = 0;
-
-  if (len == 0) return true;
-  if (len > SIZE_MAX / sizeof(*arr->data)) return false;
-
-  arr->data = malloc(len * sizeof(*arr->data));
-  if (!arr->data) return false;
+  size_t bytes = sizeof(ARRAY_DEF_TYPED_(Array_)) + len * sizeof(T);
+  ARRAY_DEF_TYPED_(Array_) *arr = calloc (1, bytes)
+  if (arr == NULL) return NULL;
 
   arr->len = len;
-  return true;
+  return arr;
 }
 
 
-static inline void
-ARRAY_DEF_TYPED_(free_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr)
+void
+ARRAY_DEF_TYPED_(removeArray_)(ARRAY_DEF_TYPED_(Array_) *arr)
+{ free(arr); }
+
+
+void
+ARRAY_DEF_TYPED_(fillArray_)(ARRAY_DEF_TYPED_(Array_) *arr, T val)
 {
-  if (!arr) return;
-
-  free(arr->data);
-  arr->data = NULL;
-  arr->len = 0;
-}
-
-
-static inline T
-ARRAY_DEF_TYPED_(get_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr, size_t i)
-{
-  assert(i < arr->len);
-  return arr->data[i];
-}
-
-
-static inline void
-ARRAY_DEF_TYPED_(set_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr, size_t i, T val)
-{
-  assert(i < arr->len);
-  arr->data[i] = val;
-}
-
-
-static inline T *
-ARRAY_DEF_TYPED_(at_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr, size_t i)
-{
-  assert(i < arr->len);
-  return &arr->data[i];
-}
-
-
-static inline T *
-ARRAY_DEF_TYPED_(front_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
-{
-  assert(arr->len > 0);
-  return &arr->data[0];
-}
-
-
-static inline T *
-ARRAY_DEF_TYPED_(back_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
-{
-  assert(arr->len > 0);
-  return &arr->data[arr->len - 1];
-}
-
-
-static inline bool
-ARRAY_DEF_TYPED_(empty_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
-{
-  return arr->len == 0;
-}
-
-
-static inline T *
-ARRAY_DEF_TYPED_(begin_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
-{
-  return arr->data;
-}
-
-
-static inline T *
-ARRAY_DEF_TYPED_(end_Array_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
-{
-  return arr->data + arr->len;
-}
-
-
-static inline void
-ARRAY_DEF_TYPED_(fill_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr, T val)
-{
-  for (size_t i = 0; i < arr->len; ++i) {
+  for (size_t i = 0; i < arr->len; ++i)
     arr->data[i] = val;
-  }
 }
 
 
-static inline void
-ARRAY_DEF_TYPED_(swap_Array_)(ARRAY_DEF_TYPED_(Array_) *const arrA, ARRAY_DEF_TYPED_(Array_) *const arrB)
+_Bool
+ARRAY_DEF_TYPED_(swapArray_)(ARRAY_DEF_TYPED_(Array_) *arr1, ARRAY_DEF_TYPED_(Array_) *arr2)
 {
-  assert(arrA->len == arrB->len);
-  for (size_t i = 0; i < arrA->len; ++i) {
-    T tmp = arrA->data[i];
-    arrA->data[i] = arrB->data[i];
-    arrB->data[i] = tmp;
+  if (arr1->len != arr2->len) return 0;
+  for (size_t i = 0; i < arr1->len; ++i) {
+    const T tmp = arr1->data[i];
+    arr1->data[i] = arr2->data[i];
+    arr2->data[i] = tmp;
   }
+  return 1;
 }
 
 
-static inline void
-ARRAY_DEF_TYPED_(clear_Array_)(ARRAY_DEF_TYPED_(Array_) *const arr)
+T *
+ARRAY_DEF_TYPED_(beginArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{ return &arr->data[0]; }
+
+
+T *
+ARRAY_DEF_TYPED_(endArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{ return &arr->data[len - 1]; }
+
+
+size_t
+ARRAY_DEF_TYPED_(sizeArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{ return arr->len; }
+
+
+_Bool
+ARRAY_DEF_TYPED_(emptyArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{ return ARRAY_DEF_TYPED_(sizeArray_)(arr) == 0; }
+
+
+T
+ARRAY_DEF_TYPED_(atArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr, size_t idx)
 {
-  for (size_t i = 0; i < arr->len; ++i) {
-    arr->data[i] = 0;
-  }
+  /* Out-of-bounds index throw */
+  if (idx >= arr->len) abort();
+
+  return arr->data[idx];
+}
+
+
+T
+ARRAY_DEF_TYPED_(frontArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{ return *ARRAY_DEF_TYPED_(beginArray_)(arr); }
+
+
+T
+ARRAY_DEF_TYPED_(backArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr)
+{ return *ARRAY_DEF_TYPED_(endArray_)(arr); }
+
+
+_Bool
+ARRAY_DEF_TYPED_(equalsArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr1, const ARRAY_DEF_TYPED_(Array_) *const arr2)
+{
+  if (arr1->len != arr2->len) return 0;
+  for (size_t i = 0; i < arr1->len; ++i)
+    if (arr1->data[i] != arr2->data[i]) return 0;
+
+  return 1;
+}
+
+
+_Bool
+ARRAY_DEF_TYPED_(notEqualsArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr1, const ARRAY_DEF_TYPED_(Array_) *const arr2)
+{ return !ARRAY_DEF_TYPED_(equalsArray_)(arr1, arr2); }
+
+
+_Bool
+ARRAY_DEF_TYPED_(lessThanArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr1, const ARRAY_DEF_TYPED_(Array_) *const arr2)
+{
+  if (arr1->len != arr2->len) return 0;
+  for (size_t i = 0; i < arr1->len; ++i)
+    if (arr1->data[i] < arr2->data[i]) return 1;
+
+  return 0;
+}
+
+_Bool
+ARRAY_DEF_TYPED_(greaterThanArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr1, const ARRAY_DEF_TYPED_(Array_) *const arr2)
+{
+  if (arr1->len != arr2->len) return 0;
+  for (size_t i = 0; i < arr1->len; ++i)
+    if (arr1->data[i] > arr2->data[i]) return 1;
+
+  return 0;
+}
+
+_Bool
+ARRAY_DEF_TYPED_(lessThanOrEqualToArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr1, const ARRAY_DEF_TYPED_(Array_) *const arr2)
+{
+  if (arr1->len != arr2->len) return 0;
+  return !ARRAY_DEF_TYPED_(greaterThanArray_)(arr1, arr2);
+}
+
+
+_Bool
+ARRAY_DEF_TYPED_(greaterThanOrEqualToArray_)(const ARRAY_DEF_TYPED_(Array_) *const arr1, const ARRAY_DEF_TYPED_(Array_) *const arr2)
+{
+  if (arr1->len != arr2->len) return 0;
+  return !ARRAY_DEF_TYPED_(lessThanArray_)(arr1, arr2);
 }
 
 #undef ARRAY_DEF_TYPED_
